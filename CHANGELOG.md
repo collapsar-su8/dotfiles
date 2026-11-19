@@ -2,6 +2,39 @@
 
 > 本文件记录所有历史变更。用法说明见 [README.md](README.md)。
 
+## 2026-11-19
+
+### 美化包化：深度整合 + 可读性修复（collapsar-su8 fork）
+
+本仓库 fork 自 sijin-xb/dotfiles 做美化包化改造，本轮变更：
+
+**精简**
+- 删除与上游 pctrade/end4-PC 逐字节相同的 747 个 vendor 文件（git blob 哈希比对），
+  shell 底盘改由安装时从 collapsar-su8/end4-pC fork 拉取，仓库体积瘦 61%
+- 删除 caelestia / dms（niri）两套会话的全部配置内容与 sync-dms-plugins.sh，
+  会话固定 end4pc（旧的 SESSION 值给警告并回退）
+- 删除约 250MB 内置壁纸，改 [docs/WALLPAPERS.md](docs/WALLPAPERS.md) 外链清单；
+  `sync_wallpapers` 的目录守卫让安装/更新自动跳过
+- 移除壁纸选择器的五个在线壁纸源（Unsplash / Pexels / Wallhaven / Blapples /
+  NA-ive）及其 service 文件，只保留本地目录
+
+**可读性修复（玻璃上白字灾难）**
+- 根因：自动透明度把玻璃压到 10% 不透明度。三层修复：
+  ① `glassContentTransparency` 0.6 → 0.3（面板底色 alpha 0.4 → 0.7）；
+  ② 出厂 config.json 关闭 automatic；
+  ③ 数字统一固定墨色，深浅主题各一档（暗 `#DDE1E6` / 浅 `#2E3238`），
+  对玻璃叠黑/白/中灰壁纸的合成底 WCAG 对比度实测 ≥4.6
+
+**侧栏半高**
+- 右侧栏从整屏高改为可用区上半（`height: parent.height * 0.5`），
+  比例式高度在 200% 缩放下自动正确；内容区包 Flickable 兜底滚动
+  （编辑模式下禁用），通知区本就内部滚动，组件无需重排
+
+**验证**：5 个 bash 测试套件全过；Python 129 条中 3 条 doctor 失败与
+pristine HEAD 逐项一致（非 Arch 环境的既有失败）；dryrun 34 项失败与
+pristine 失败名单逐字一致（同为既有失败）——本仓库改动零回归。
+
+
 ## 2026-10-23
 
 ### GTK3 应用的右键菜单变白底

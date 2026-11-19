@@ -1464,11 +1464,12 @@ class TestSessionSkip(TempHome):
     """会话过滤：只部署选中的那套合成器 / shell。"""
 
     def test_skip_set_filters_by_compositor(self) -> None:
+        # 美化包已移除 niri 会话内容，样本改用仍在仓库里的 hyprland.lua
         with mock.patch.object(deploy, 'session_skip_set',
-                               return_value={'config/desktop/niri/config.kdl'}):
+                               return_value={'config/desktop/hypr/hyprland.lua'}):
             rows = deploy.walk_sources()
             rels = [r for _s, _d, r, _a in rows]
-            self.assertIn('config/desktop/niri/config.kdl', rels)   # walk 不做过滤
+            self.assertIn('config/desktop/hypr/hyprland.lua', rels)   # walk 不做过滤
             # 过滤由调用方做（install / update），见它们各自的循环
 
     def test_install_counts_skipped_separately(self) -> None:

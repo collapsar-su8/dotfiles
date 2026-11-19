@@ -1,294 +1,104 @@
-# sijin-xb's dotfiles
+# collapsar-su8 美化包（Hyprland + Quickshell）
 
-Arch 系 + Wayland 的桌面配置。会话三选一整体部署，装哪套只碰哪套。
+基于 [sijin-xb/dotfiles](https://github.com/sijin-xb/dotfiles) 与
+[pctrade/end4-PC](https://github.com/pctrade/end4-PC)（上游
+[end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)）深度整合精简的
+**Arch + Wayland 美化包**，只保留一套会话：
 
-配置由自带的 bash 安装器落地，不需要 chezmoi。源码树用 `config/`、`local/`、
-`icons/` 三个顶层目录，分别映射到 `~/.config/`、`~/.local/`、`~/.icons/`。
-部署、快照、回档都由 `install.sh` 完成。
+> **end4pc** — Hyprland + Quickshell（end4-PC 底盘）
 
-Quickshell 部分基于 [pctrade/end4-PC](https://github.com/pctrade/end4-PC)
-（上游是 [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)），
-本仓库维护差异层，首次安装时克隆上游底盘。
+## 与上游的差异（本包存在的理由）
+
+### 架构：深度整合 + 双仓库
+
+- [collapsar-su8/end4-pC](https://github.com/collapsar-su8/end4-pC) — **底盘 fork**：
+  完整 shell，包含本包的美化修复（下节）
+- [collapsar-su8/dotfiles](https://github.com/collapsar-su8/dotfiles)（本仓库）—
+  **差异层 + 主题 + 安装器**：
+  - 删掉了与上游逐字节相同的 747 个 vendor 文件（安装时从底盘 fork 拉取，瘦 61%）
+  - 只保留真正改过的 117 个文件 + 362 个自研模块（灵动岛、仪表盘、桌面歌词等）
+  - 删掉 caelestia / dms（niri）两套会话的全部配置内容，安装器会话固定 end4pc
+  - 删掉约 250 MB 内置壁纸 → [docs/WALLPAPERS.md](docs/WALLPAPERS.md) 外链清单
+  - 安装器底盘 URL 指向自己的 end4-pC fork
+
+### 可读性修复（默认生效）
+
+原版玻璃效果在亮壁纸上文字几乎不可读，本包做了三层修复，全部经过
+WCAG 对比度实测：
+
+1. **玻璃加厚**：面板底色 alpha 0.4 → **0.7**（`glassContentTransparency 0.6 → 0.3`）。
+   这是白字灾难的总根因——原版自动透明度会把玻璃调到 10% 不透明度。
+2. **关闭自动透明度**：出厂 config.json 固定 `contentTransparency: 0.3`，
+   不再被自动模式拉薄。
+3. **数字统一固定墨色**（深浅主题各一档）：
+   - 深色主题 `#DDE1E6`，浅色主题 `#2E3238`
+   - 实测对玻璃（alpha 0.7）叠黑/白/中灰壁纸的合成底，对比度全部 ≥4.6（WCAG AA 4.5）
+   - 玻璃关闭（实体面板）时自动回退主题原色
+   - 实现位置：`Appearance.colors.numberInkOnGlass`（底盘 + 差异层各一份）、
+     `StyledText` 默认色、`custom-island/Theme.qml` 的 `numberInk`
+
+### 侧栏半高
+
+右侧栏从整屏高改为 **可用区上半（约半屏）**（`height: parent.height * 0.5`）。
+比例式高度在 200% 等缩放下自动正确（QML 逻辑像素缩放无关）。
+通知区本身是内部滚动的 ListView，固定区块超出半屏时由新加的
+Flickable 兜底滚动；编辑模式（拖拽排序）下滚动自动禁用。
+
+### 移除在线壁纸源
+
+壁纸选择器只保留本地目录（Unsplash / Pexels / Wallhaven / Blapples / NA-ive
+五个在线源已删除，含对应 service 文件）。壁纸请按
+[docs/WALLPAPERS.md](docs/WALLPAPERS.md) 手动下载到 `~/Pictures/Wallpapers/`。
 
 ## 安装
 
 ```bash
-git clone https://github.com/sijin-xb/dotfiles.git
+git clone https://github.com/collapsar-su8/dotfiles.git
 cd dotfiles
 ./install.sh              # TUI 菜单
 ./install.sh install      # 完整安装（7 步，开始前自动快照）
 ```
 
-只下载 `install.sh` 也能跑。它会 clone 仓库到 `~/.local/share/dotfiles-src`
-再用仓库里那份重新执行：
+- 壁纸外链：按 [docs/WALLPAPERS.md](docs/WALLPAPERS.md) 下载
+- 字体可选：`FONTS=0` 不碰任何字体包
+- 旧的 `SESSION=caelestia / dms / niri` 已移除，给了会警告并回退 end4pc
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/sijin-xb/dotfiles/main/install.sh \
-    | bash -s -- update
-```
-
-日常升级不要重跑 `install`：它会重装包、重拉上游底盘、覆盖本地对底盘的改动。
-
-```bash
-cd dotfiles && git pull
-./install.sh update                    # 只同步文件层
-./install.sh update --with-packages    # 顺便补齐新增依赖（只补不卸）
-```
-
-## 命令
+## 日常使用
 
 | 命令 | 作用 |
 |---|---|
-| `install` | 完整安装（7 步），开始前创建 pre-install 快照 |
-| `update` | 增量同步文件层。选项见下 |
-| `rollback` | 还原到 pre-install 快照，执行前先存 pre-rollback 快照 |
-| `restore` | 撤销回档：重新应用 pre-rollback 快照 |
-| `archive` | 打包配置、状态、缓存为 tar.gz |
-| `uninstall` | 可选先存档，再删除受管理路径 |
-| `status` | 会话、清单条目、上次 revision、快照、占用 |
-| `doctor` | 缺哪些包、配置在不在、QML 模块齐不齐 |
-| `deps` | 依赖清单，`--missing` 只看缺口 |
-| `theme` | 图标、光标、GTK 主题在 9 个位置的取值与一致性 |
-| `clean` | 清理临时残留，`--all` 连自举缓存、旧快照、旧备份一起清 |
-| 无参数 | TUI 菜单 |
+| `./install.sh update` | 增量同步文件层（日常升级用这个，**不要重跑 install**） |
+| `./install.sh rollback` | 还原到 pre-install 快照 |
+| `./install.sh restore` | 撤销回档 |
+| `./install.sh status` / `doctor` / `deps` / `theme` | 只读体检四件套 |
+| `./install.sh archive` / `uninstall` / `clean` | 打包 / 卸载 / 清理 |
 
-`status`、`doctor`、`deps`、`theme` 只读。
-
-`update` 选项：
-
-| 选项 | 作用 |
-|---|---|
-| `--dry-run` | 只打印计划，不写文件 |
-| `--pull` | 先 `git pull` |
-| `--with-packages` | 补齐新增依赖（只补不卸） |
-| `--no-prune` | 不清理仓库已删除的文件 |
-| `--force` | 版本号没变也执行 |
-| `--yes` / `-y` | 不交互确认 |
-
-`archive` 选项：`-o PATH` 指定输出路径，`--delete` 打包后清理源文件。
-
-完整选项与环境变量：`./install.sh --help`。
-
-删除类操作只作用于当前会话的路径，另一套会话的配置不动。
-
-## 会话
-
-| `SESSION=` | 合成器 | 桌面 shell | 配置入口 |
-|---|---|---|---|
-| `end4pc`（默认） | Hyprland | Quickshell（end4-PC 底盘） | `~/.config/hypr/hyprland.lua`、`~/.config/quickshell/end4-PC` |
-| `caelestia` | Hyprland | caelestia shell | `~/.config/quickshell/caelestia` |
-| `dms` | niri | DankMaterialShell | `~/.config/niri/config.kdl` |
-
-- 不设 `SESSION` 时在 `[1/7]` 步询问。设了跳过提问，适合脚本化重装。
-- `end4pc` 与 `caelestia` 会把 Caelestia QML 插件编译到 `~/src/caelestia-build`
-  （end4-PC 的锁屏依赖 `import Caelestia.Config`），`dms` 不需要。
-- 两套合成器都要用：`INSTALL_BOTH_COMPOSITORS=1`。
-
-## 环境要求
-
-- Arch 系（`/etc/arch-release` 存在）、Wayland 会话、普通用户运行
-  （需要 sudo 装包，脚本会拒绝 root）
-- 合成器随会话而定：Hyprland（`end4pc` / `caelestia`）或 niri（`dms`）
-- niri 必须是 [SHORiN-KiWATA/niri](https://github.com/SHORiN-KiWATA/niri) fork
-  （AUR `niri-shorin-fork-git`）。配置用到该 fork 独有的 `magnifier`、
-  `grid-overview`、cursor shake-to-enlarge、`screen-cast-picker` 配色，
-  以及单 `Mod` 键绑定。换成上游 niri 或 `niri-spicy-git` 会因未知配置项
-  拒绝加载整份配置。它是 `provides`/`conflicts niri` 的包，换装前先
-  `sudo pacman -Rdd <旧包>`，换完 `niri validate`。
-- quickshell、matugen、mpvpaper 缺失时由脚本自动安装（pacman → AUR → 源码编译）
-
-字体是可选的：`FONTS=0` 不碰任何字体包（也不移除文泉驿兜底），不设置则交互询问。
-
-其余环境变量见 `./install.sh --help`。
-
-## 内容
-
-### 合成器
-
-- **Hyprland**（Lua 配置）：`hyprland/` 是模板层，`custom/` 是个人覆盖层，同名文件后加载
-- **niri**（KDL）：`config.kdl` 入口，按功能拆文件。键位自 Hyprland 迁移，差异写在
-  `binds-hyprland-migrated.kdl`；间距、边框、焦点环由 `override-layout.kdl` 覆盖 DMS 生成值
-
-### 桌面外壳
-
-Quickshell（end4-PC 差异层）：
-
-- **岛屿与仪表盘**：栏中央一颗胶囊（时间、音乐、计时器、秒表、录屏轮播），点击展开
-  五页面板（仪表盘、媒体、Performance、进程、天气）→ [bar-and-dashboard.md](docs/bar-and-dashboard.md)
-- **灵动岛**：音乐、音量、录屏的顶部动态胶囊 → [dynamic-island.md](docs/dynamic-island.md)
-- **锁屏**：Caelestia 风格三栏布局 + Material 3 形变动画，quickshell 未运行时回退 hyprlock
-  → [lockscreen.md](docs/lockscreen.md)
-- **快捷键管理器**：`Super + /` 速查表，可搜索、可点行改键（Enter 才写入）
-  → [keybind-manager.md](docs/keybind-manager.md)
-- **桌面歌词**：逐字计时（酷狗 KRC），适配任意 MPRIS 播放器 → [integrations.md](docs/integrations.md)
-- **GitHub 项目页**：填用户名列出仓库，入口在设置里 → [github-page.md](docs/github-page.md)
-
-### 外观与取色
-
-- **matugen 壁纸取色**：kitty、alacritty、foot、fastfetch、fcitx5（含 rime 候选框）、
-  mako、Hyprland 与 niri 联动配色，以及 Kvantum + Qt 应用（end4-PC 专属）。
-  另有 micro、Kate、nvim 三个编辑器的原生配色主题
-- **图标主题**：WhiteSur 打底，文件夹由 matugen 按壁纸次色系重着色
-  （`WhiteSur-Matugen-{A,B}` 覆盖主题，`Inherits=WhiteSur-dark`），A/B 交替绕开
-  GTK/Qt 的图标缓存。散在 gsettings、GTK2+3+4、Qt5+6、fuzzel、xsettingsd、rofi
-  的 9 处取值由 `./install.sh theme` 核对
-- **壁纸**：视差 + 多后端视频壁纸 → [appearance.md](docs/appearance.md)
-- **区域截图与录屏**：整屏压暗，把选区或指到的窗口挖空高亮，点一下即截该窗口
-
-### 编辑器与终端
-
-- **nvim（LazyVim）**：保留 Ctrl 系快捷键（存盘、找文件、文件树、终端、注释），
-  vim 动词还给 vim。Telescope + Neo-tree，中文输入法自动切换，GUI 前端 neovide
-  → [速查表](docs/nvim-keymaps.md) · [学习清单](docs/nvim-learning.md)
-- fish（fzf 绑定、nvm）、kitty、foot、btop、fastfetch、fuzzel、mako、mpd
-
-## 快捷键
-
-| 按键 | 功能 |
-|---|---|
-| `Super` | 启动器（拼音搜索） |
-| `Super+T` | 终端召唤（quake 风格 kitty） |
-| `Super+/` | 快捷键管理器 |
-| `Super+Q` | 关闭窗口 |
-| `Super+S` | 临时工作区 scratchpad |
-| `Super+L` | 锁屏 |
-| `Super+1..0` | 切换工作区 |
-| `Super+方向键` | 切换焦点 |
-| `Super+Shift+方向键` | 移动窗口 |
-| `Super+滚轮` | 切窗口、切工作区 |
-| `Super+Shift+S`、`Print` | 区域截图 |
-| `Super+Shift+R` | 区域录屏 |
-| `Super+Shift+P/N/B` | 播放暂停、下一首、上一首 |
-| `Ctrl+Super+T` | 壁纸选择器 |
-
-完整列表在配置里：Hyprland 见 `hyprland/keybinds.lua` + `custom/keybinds.lua`，
-niri 见 `binds.kdl` + `dms/binds.kdl`。两套键位同功能同键位，上表通用。
-
-## 目录结构
-
-```
-install.sh                 安装器引导（83 行：定位仓库、加载 lib/、分发）
-lib/                       bash 侧：包列表、快照原语、部署路径清单、TUI
-dotctl/                    Python 引擎：子命令实现（纯标准库，3.11+）
-tools/                     维护脚本
-runtime-keep.txt           运行时生成物清单：这些路径不覆盖已存在的文件
-config/                    部署到 ~/.config
-  desktop/                 桌面环境
-    hypr/                  Hyprland：hyprland.lua 入口 + hyprland/ 模板层 + custom/ 覆盖层
-    niri/                  niri：config.kdl 入口 + binds/rule/layout/animations 分片
-    quickshell/end4-PC/    shell 差异层：custom-island/、modules/ii/
-    DankMaterialShell/     DMS 插件（视频壁纸、cava 可视化）
-    matugen/               取色引擎：config.toml + templates/
-    gtk-3.0/ gtk-4.0/ qt5ct/ qt6ct/ xsettingsd/
-                           GTK、Qt、XSettings 静态配置
-    fontconfig/            MiSans + 按语言切换 CJK 地区字形，serif 走霞鹜文楷
-    systemd/ pipewire/ environment.d/ scripts/
-  personal/                个人偏好
-    fish/ kitty/ foot/ alacritty/ nvim/ neovide/ btop/ fastfetch/
-    fuzzel/ mako/ micro/ mpd/ bat/ walker/ katerc/
-    fcitx5/                fcitx5 与 rime 配置
-local/                     部署到 ~/.local
-  share/fcitx5/            rime 方案自定义（雾凇拼音）
-  share/themes/adw-gtk3/   GTK3 浅色基底主题
-icons/                     光标主题兜底
-vimrc                      部署到 ~/.vimrc
-docs/                      设计说明与排障文档
-tests/                     install.sh 的行为测试
-check-qml-deps.py          QML 模块依赖自检
-```
-
-文件属性用后缀表达：`x.conf.private` 部署时剥掉后缀并设 0600，
-`y.service.symlink` 内容是链接目标。执行位由文件的 mode 决定。
-
-## 文档
-
-- [docs/README.md](docs/README.md) — 文档索引（18 篇，按主题分类）
-- [CHANGELOG.md](CHANGELOG.md) — 历史变更
-
-常翻的几篇：[troubleshooting.md](docs/troubleshooting.md)（排障索引）、
-[bar-and-dashboard.md](docs/bar-and-dashboard.md)、
-[compositor-effects.md](docs/compositor-effects.md)（niri ↔ Hyprland 参数对照）、
-[nvim-keymaps.md](docs/nvim-keymaps.md)。
+`update` 选项：`--dry-run`（只打印计划）、`--with-packages`（补齐新增依赖）、
+`--pull`（先 git pull）等，完整见 `./install.sh --help`。
 
 ## 测试
 
-改 `install.sh` 或 `lib/` 之后跑这些。都不需要 sudo、网络、真实包管理器。
+改 `install.sh` 或 `lib/` 之后跑（无需 sudo / 网络 / 真实包管理器）：
 
-| 脚本 | 覆盖 |
-|---|---|
-| `tests/install-sh-behaviour-test.sh` | 纯函数级：属性后缀、完整性自检、删除范围、忽略清单、依赖矩阵 |
-| `tests/install-sh-dryrun.sh` | 端到端：假命令 + 临时 `$HOME`，跑 `cmd_install` 三轮（安装、迁移、幂等） |
-| `tests/install-sh-cli-test.sh` | CLI 一致性：子命令帮助、多余参数告警、未知选项退出码 |
-| `tests/install-sh-prompt-test.sh` | `confirm` / `read_answer` 在 EOF、沉默管道、pty 下不挂死 |
-| `tests/install-sh-tmpfiles-test.sh` | 临时文件：统一 run 目录、EXIT trap、SIGINT 不留垃圾 |
-| `tests/install-sh-archive-test.sh` | `archive` 打包内容、拒绝存档的返回码语义 |
-| `tests/test_dotctl.py` | Python 侧契约测试：输出格式、会话推断、清单计数、确认兜底 |
+```bash
+bash tests/install-sh-behaviour-test.sh
+bash tests/install-sh-dryrun.sh
+bash tests/install-sh-cli-test.sh
+bash tests/install-sh-prompt-test.sh
+bash tests/install-sh-tmpfiles-test.sh
+bash tests/install-sh-archive-test.sh
+python3 -m unittest discover -s tests -p 'test_*.py' -t .
+```
 
-失败时打印「实际 vs 期望」并以非 0 退出。
-`DRYRUN_ROOT=/tmp/xxx bash tests/install-sh-dryrun.sh` 可保留现场。
+## 致谢与许可证
 
-Python 侧单独跑：`python3 -m unittest discover -s tests -p 'test_*.py' -t .`
+- [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland) — 上游的上游
+- [pctrade/end4-PC](https://github.com/pctrade/end4-PC) — 直接上游（底盘）
+- [sijin-xb/dotfiles](https://github.com/sijin-xb/dotfiles) — 本仓库的直接来源，
+  安装器/快照/测试体系与自研 Quickshell 模块均出自该项目
+- [caelestia-dots/caelestia](https://github.com/caelestia-dots/caelestia) —
+  锁屏移植来源；[soramanew/m3shapes](https://github.com/soramanew/m3shapes) —
+  形变动画依赖
 
-### 架构
-
-子命令由纯标准库 Python 实现（`dotctl/`，3.11+，零第三方依赖）。
-`install.sh` 是 83 行引导：定位仓库、按字典序 `source lib/*.sh`、把子命令
-转给 `dotctl_run`。
-
-仍在 bash 里的部分是有意保留的：以调外部命令为主的段落，包括装包
-（pacman、AUR）、clone 上游底盘、cmake 编译 Caelestia 插件、建 venv、
-会话交互选择。这些由 Python 按顺序调用（`dotctl/bashsrc.py`）。
-
-改代码时的三条约束：
-
-- **包列表与部署路径清单以 bash 侧为唯一来源**（`lib/60-packages.sh` 的
-  `*_pkgs()`、`lib/15-python.sh` 的 `dotctl_archive_paths`），Python 经
-  `bashsrc` 读。另抄一份会导致「`deps` 说有、`install` 时没有」。
-- **路径常量在 bash 侧是 source 时冻结的**，Python 必须用传下来的值
-  （`DOTCTL_BACKUP_ROOT` 等），不能自己按 `$HOME` 推。
-- **改动必须与迁移前的输出逐字一致**：把 `HEAD` 导出到临时目录对跑 diff
-  （`git archive HEAD | tar -x -C /tmp/x`）。测试台用隔离 HOME + 假命令，
-  `tests/` 里有现成的对照脚本。
-
-`dotctl/` 分层：`paths`（路径常量）、`ui`（输出）、`bashsrc`（调 bash 侧
-只读函数的桥）、`prompt`（确认）、`deploy`（源树遍历、忽略清单、单条目落盘、
-清单读写）、`snapshot` / `tmpfiles` / `fsutil`、`commands/*`（每个子命令一个模块）。
-
-改 matugen 的终端配色模板（kitty、alacritty、foot、konsole）之后跑
-`python3 tools/term-color-audit.py`：它把四个终端的 16 个 ANSI 槽位拉齐算
-WCAG 对比度，标出暗背景上看不清的槽位，以及 bright 反而比 normal 暗的错位。
-
-## 排障
-
-- 备份与快照在 `~/.local/state/dotfiles-backup/`（`snapshots/`、`state/`）。
-  出问题先 `./install.sh rollback`
-- 装完某个组件没出现（栏少了东西、锁屏起不来）：多半是 QML 模块缺失，
-  跑 `./install.sh doctor`
-- 主题不一致（文件管理器换了、fuzzel 没换）：`./install.sh theme` 列出 9 处取值
-- 其余见 [docs/troubleshooting.md](docs/troubleshooting.md)
-
-## 致谢与上游
-
-**直接上游**：[pctrade/end4-PC](https://github.com/pctrade/end4-PC) by
-[@pctrade](https://github.com/pctrade)。`config/desktop/quickshell/end4-PC/`
-基于此项目修改，安装时克隆它作为底盘，本仓库只维护差异层。
-
-**上游的上游**：[end-4/dots-hyprland](https://github.com/end-4/dots-hyprland)
-by [@end-4](https://github.com/end-4)。`end4-PC` 是该项目的
-illogical-impulse shell 的个人 fork。
-
-**其他**：天气 API 来自 [@gh0stzk](https://github.com/gh0stzk)；
-部分 shader 过渡来自 [@simeulinuxkaliaiwr](https://github.com/simeulinuxkaliaiwr)；
-壁纸选择器的斜切轮播视图灵感来自
-[ilyamiro/serpantinum](https://github.com/ilyamiro/serpantinum)；
-锁屏的三栏布局与展开动画移植自
-[caelestia-dots/caelestia](https://github.com/caelestia-dots/caelestia)（GPL-3.0），
-按本项目设计令牌重写配色与字体，形变动画依赖
-[soramanew/m3shapes](https://github.com/soramanew/m3shapes)
-（AUR `qt6-m3shapes-git`）。认证、媒体、歌词等运行时逻辑仍走 end4-PC 自身服务，
-未引入 Caelestia shell 或 CLI。
-
-## 许可证
-
-[GPL-3.0](LICENSE)，与上游一致。作为衍生作品，本仓库保留上游的版权与致谢信息，
-并对个人修改部分负责。
+许可证 [GPL-3.0](LICENSE)，与全部上游一致。作为衍生作品保留上游版权与致谢，
+对修改部分负责。

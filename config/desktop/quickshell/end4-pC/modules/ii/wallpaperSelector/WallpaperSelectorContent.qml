@@ -16,9 +16,7 @@ MouseArea {
     property real previewCellAspectRatio: 4 / 3
     property bool useDarkMode: Appearance.m3colors.darkmode
     property bool showControls: false
-    property string source: "local"
-    property string selectedResolution: "1080p"
-    property string selectedColorGroup: ""
+    property string source: "local" // 仅保留本地源；在线壁纸源已随美化包移除
     property bool toolbarVisible: showControls || Config.options.wallpaperSelector.showSearchbar
     property bool filterFieldFocused: false
     // filterField 的 id 作用域在 Loader 的 sourceComponent 里，文件顶层引用不到，
@@ -121,10 +119,10 @@ MouseArea {
             if (!root.filterFieldFocused) gridLoader.item?.moveSelection(1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
-            if (!root.filterFieldFocused && root.source !== "local") gridLoader.item?.moveSelection(-root.columns);
+            if (!root.filterFieldFocused) gridLoader.item?.moveSelection(-root.columns);
             event.accepted = true;
         } else if (event.key === Qt.Key_Down) {
-            if (!root.filterFieldFocused && root.source !== "local") gridLoader.item?.moveSelection(root.columns);
+            if (!root.filterFieldFocused) gridLoader.item?.moveSelection(root.columns);
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             if (!root.filterFieldFocused) gridLoader.item?.activateCurrent();
@@ -264,7 +262,6 @@ MouseArea {
 
                     Toolbar {
                         anchors.centerIn: parent
-                        visible: root.source !== "blapples" && root.source !== "naive" && root.source !== "wallhaven"
                         colBackground: Appearance.colors.colLayer1
                         outerShadow: true
                         glass: true
@@ -308,53 +305,9 @@ MouseArea {
                             }
                         }
 
-                        Loader {
-                            active: root.source !== "local" && root.source !== "blapples" && root.source !== "naive"
-                            visible: active
-                            sourceComponent: RowLayout {
-                                spacing: 4
-                                Repeater {
-                                    model: ["1080p", "2K", "4K"]
-                                    delegate: RippleButton {
-                                        required property string modelData
-                                        implicitHeight: 38
-                                        buttonRadius: height / 2
-                                        toggled: root.selectedResolution === modelData
-                                        colBackgroundToggled: Appearance.colors.colSecondaryContainer
-                                        colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
-                                        colRippleToggled: Appearance.colors.colSecondaryContainerActive
-                                        onClicked: root.selectedResolution = modelData
-                                        contentItem: StyledText {
-                                            anchors.centerIn: parent
-                                            text: modelData
-                                            color: parent.toggled
-                                                ? Appearance.colors.colOnSecondaryContainer
-                                                : Appearance.colors.colOnLayer2
-                                        }
-                                    }
-                                }
-                            }
-                        }
+
                     }
 
-                    Loader {
-                        active: root.source === "naive"
-                        visible: active
-                        anchors.centerIn: parent
-                        sourceComponent: CustomColorSelectionArray {
-                            currentValue: root.selectedColorGroup
-                            options: [
-                                    { value: "",       displayName: Translation.tr("All colors"), color: "transparent", rainbow: true },
-                                { value: "red",    displayName: Translation.tr("Red"),        color: "#E0483E" },
-                                { value: "orange", displayName: Translation.tr("Orange"),     color: "#E08A3E" },
-                                { value: "yellow", displayName: Translation.tr("Yellow"),     color: "#E0C93E" },
-                                { value: "green",  displayName: Translation.tr("Green"),      color: "#6CBF5C" },
-                                { value: "blue",   displayName: Translation.tr("Blue"),       color: "#4C7FE0" },
-                                { value: "purple", displayName: Translation.tr("Purple"),     color: "#8A5CE0" },
-                            ]
-                            onSelected: newValue => root.selectedColorGroup = newValue
-                        }
-                    }
 
                     RowLayout {
                         anchors {
@@ -363,25 +316,6 @@ MouseArea {
                             verticalCenter: parent.verticalCenter
                         }
                         spacing: 6
-
-                        StyledComboBox {
-                            id: sourceCombo
-                            glass: true
-                            implicitWidth: 120
-                            model: [
-                                { value: "local",     displayName: Translation.tr("Local") },
-                                { value: "wallhaven", displayName: Translation.tr("Wallhaven") },
-                                { value: "blapples",  displayName: Translation.tr("Blapples") },
-                                { value: "naive",     displayName: Translation.tr("NA-ive") },
-                                { value: "unsplash",  displayName: Translation.tr("Unsplash") },
-                                { value: "pexels",    displayName: Translation.tr("Pexels") },
-                            ]
-                            textRole: "displayName"
-                            onCurrentIndexChanged: {
-                                root.source = model[currentIndex].value
-                                root.forceActiveFocus()
-                            }
-                        }
 
                         RippleButton {
                             implicitWidth: 36
@@ -421,12 +355,9 @@ MouseArea {
                     Loader {
                         id: gridLoader
                         anchors.fill: parent
-                        sourceComponent: {
-                            if (root.source !== "local") return onlineGridComponent;
-                            return Config.options.wallpaperSelector.viewMode === "carousel"
+                        sourceComponent: Config.options.wallpaperSelector.viewMode === "carousel"
                                 ? localCarouselComponent
-                                : localGridComponent;
-                        }
+                                : localGridComponent
                     }
 
                     Component {
@@ -442,17 +373,6 @@ MouseArea {
                         id: localCarouselComponent
                         LocalWallpaperCarousel {
                             onWallpaperSelected: path => root.selectWallpaperPath(path)
-                        }
-                    }
-
-                    Component {
-                        id: onlineGridComponent
-                        OnlineWallpaperGrid {
-                            provider: root.source
-                            resolution: root.selectedResolution
-                            colorGroup: root.selectedColorGroup
-                            onWallpaperSelected: path => root.selectWallpaperPath(path)
-                            onUpdateThumbnailsRequested: root.updateThumbnails()
                         }
                     }
 
@@ -567,162 +487,6 @@ MouseArea {
                             }
                         }
 
-                        Loader {
-                            active: root.source !== "local"
-                            visible: active
-                            sourceComponent: Toolbar {
-                                glass: true
-                                ToolbarTextField {
-                                    id: onlineSearchField
-                                    placeholderText: Translation.tr("Search online wallpapers")
-                                    clip: true
-                                    font.pixelSize: Appearance.font.pixelSize.small
-                                    onTextChanged: OnlineWallpapers.query = text
-                                    onAccepted: OnlineWallpapers.fetch()
-                                    onActiveFocusChanged: root.filterFieldFocused = activeFocus
-                                    Connections {
-                                        target: GlobalStates
-                                        function onWallpaperSelectorOpenChanged() {
-                                            if (!GlobalStates.wallpaperSelectorOpen) onlineSearchField.text = ""
-                                        }
-                                    }
-                                    Keys.onPressed: event => {
-                                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                            event.accepted = true;
-                                            return;
-                                        }
-                                        event.accepted = false;
-                                    }
-                                }
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    text: "refresh"
-                                    onClicked: OnlineWallpapers.fetch()
-                                }
-                            }
-                        }
-
-                        Loader {
-                            active: root.source === "wallhaven"
-                            visible: active
-                            sourceComponent: Toolbar {
-                                glass: true
-                                id: wallhavenToolbar
-
-                                property bool _searchFieldReady: false
-
-                                Timer {
-                                    id: searchDebounce
-                                    interval: 500
-                                    onTriggered: WallhavenSearch.search(wallhavenSearchField.text, 1)
-                                }
-
-                                ToolbarTextField {
-                                    id: wallhavenSearchField
-                                    Component.onDestruction: if (root.activeFilterField === wallhavenSearchField) root.activeFilterField = null
-                                    text: WallhavenSearch.currentQuery
-                                    placeholderText: Translation.tr("Search Wallhaven...")
-                                    Layout.preferredWidth: 220
-                                    onTextChanged: {
-                                        if (wallhavenToolbar._searchFieldReady)
-                                            searchDebounce.restart()
-                                    }
-                                    onAccepted: {
-                                        searchDebounce.stop()
-                                        WallhavenSearch.search(text, 1)
-                                    }
-                                    onActiveFocusChanged: root.filterFieldFocused = activeFocus
-                                    Keys.onPressed: event => {
-                                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                            event.accepted = true
-                                            return
-                                        }
-                                        event.accepted = false
-                                    }
-                                    Component.onCompleted: {
-                                        root.activeFilterField = wallhavenSearchField
-                                        Qt.callLater(() => wallhavenToolbar._searchFieldReady = true)
-                                    }
-                                }
-
-                                RowLayout {
-                                    visible: WallhavenSearch.currentResults.length > 0
-                                    spacing: 4
-
-                                    IconToolbarButton {
-                                        implicitWidth: height
-                                        enabled: !WallhavenSearch.fetching && WallhavenSearch.currentPage > 1
-                                        text: "chevron_left"
-                                        onClicked: WallhavenSearch.previousPage()
-                                    }
-
-                                    ToolbarTextField {
-                                        id: wallhavenPageField
-                                        implicitWidth: Math.max(40, wallhavenPageField.contentWidth + 24)
-                                        horizontalAlignment: Text.AlignHCenter
-                                        text: WallhavenSearch.currentPage.toString()
-                                        font.pixelSize: Appearance.font.pixelSize.small
-                                        inputMethodHints: Qt.ImhDigitsOnly
-                                        validator: IntValidator { bottom: 1; top: WallhavenSearch.lastPage }
-                                        onAccepted: {
-                                            const p = parseInt(text);
-                                            if (p > 0 && p <= WallhavenSearch.lastPage) {
-                                                WallhavenSearch.search(WallhavenSearch.currentQuery, p);
-                                            } else {
-                                                text = WallhavenSearch.currentPage.toString();
-                                            }
-                                        }
-                                        Connections {
-                                            target: WallhavenSearch
-                                            function onSearchCompleted() {
-                                                wallhavenPageField.text = WallhavenSearch.currentPage.toString();
-                                            }
-                                        }
-                                    }
-
-                                    StyledText {
-                                        text: "/ " + WallhavenSearch.lastPage
-                                        font.pixelSize: Appearance.font.pixelSize.small
-                                        color: Appearance.colors.colSubtext
-                                    }
-
-                                    IconToolbarButton {
-                                        implicitWidth: height
-                                        enabled: !WallhavenSearch.fetching && WallhavenSearch.currentPage < WallhavenSearch.lastPage
-                                        text: "chevron_right"
-                                        onClicked: WallhavenSearch.nextPage()
-                                    }
-                                }
-
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    text: "tune"
-                                    toggled: gridLoader.item?.showSettings
-                                    onClicked: { if (gridLoader.item) gridLoader.item.toggleSettings() }
-                                    StyledToolTip {
-                                        text: Translation.tr("Wallhaven search settings")
-                                    }
-                                }
-
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    text: root.useDarkMode ? "dark_mode" : "light_mode"
-                                    onClicked: root.useDarkMode = !root.useDarkMode
-                                    StyledToolTip {
-                                        text: Translation.tr("Toggle light/dark mode for applied wallpaper")
-                                    }
-                                }
-
-                                IconToolbarButton {
-                                    implicitWidth: height
-                                    text: "refresh"
-                                    onClicked: WallhavenSearch.search(WallhavenSearch.currentQuery, 1)
-                                    StyledToolTip {
-                                        text: Translation.tr("Refresh search results")
-                                    }
-                                }
-                            }
-                        }
 
                         ToolbarPairedFab {
                             iconText: "close"
@@ -742,10 +506,7 @@ MouseArea {
         target: GlobalStates
         function onWallpaperSelectorOpenChanged() {
             if (GlobalStates.wallpaperSelectorOpen && monitorIsFocused) {
-                if (root.source === "local")
-                    root.localFilterField?.forceActiveFocus()
-                else
-                    root.forceActiveFocus()
+                root.localFilterField?.forceActiveFocus()
             } else if (!GlobalStates.wallpaperSelectorOpen) {
                 Wallpapers.stopPreview();
             }

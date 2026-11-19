@@ -180,7 +180,7 @@ Item {
                     fill: searchToggle.toggled ? 1 : 0
                     color: searchToggle.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
                 }
-                StyledToolTip { text: Translation.tr("Search online") }
+                StyledToolTip { text: Translation.tr("Search wallpapers") }
             }
 
             TextField {

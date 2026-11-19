@@ -1,25 +1,21 @@
 # ============================================================
-# 会话选择（end4pc / caelestia / dms）与 FONTS 交互
+# 会话选择（美化包只保留 end4pc）与 FONTS 交互
 # ============================================================
-# ---------- 会话选择：合成器 + 桌面 Shell（三选一） ----------
-# 三套组合各自对应一套配置：
-#   1) end4-pC   Hyprland + quickshell（end4-PC 底盘，pctrade/end4-pC）
-#                入口 ~/.config/hypr/hyprland.lua + ~/.config/quickshell/end4-pC
-#   2) caelestia Hyprland + caelestia shell（caelestia-dots/shell）
-#                shell 本体 clone 到 ~/.config/quickshell/caelestia
-#   3) dms       niri + DankMaterialShell（DMS，niri 专属桌面 shell）
-#                入口 ~/.config/niri/config.kdl，DMS 配置在 ~/.config/DankMaterialShell
+# ---------- 会话选择：合成器 + 桌面 Shell ----------
+# 美化包精简后只提供一套会话：
+#   end4-pC   Hyprland + quickshell（end4-PC 底盘，本包的 collapsar-su8/end4-pC fork）
+#             入口 ~/.config/hypr/hyprland.lua + ~/.config/quickshell/end4-pC
 #
-# Caelestia QML 插件（end4-pC 与 caelestia 都需要）：源码在
+# Caelestia QML 插件（end4-pC 锁屏的硬依赖）：源码在
 # ~/src/caelestia-plugin-src，编译到 ~/src/caelestia-build。
 # fish/config.fish 与 start_quickshell.sh 两处读 QML2_IMPORT_PATH，
 # 换位置要同步改这两处。
 #
-# 可交互选择，也可用环境变量预设：SESSION=caelestia ./install.sh install
-# 兼容旧变量：COMPOSITOR=niri 等价 SESSION=dms，COMPOSITOR=hyprland 等价 SESSION=end4pc
-SESSION="${SESSION:-}"        # end4pc | caelestia | dms
-COMPOSITOR="${COMPOSITOR:-}"  # hyprland | niri（由 SESSION 派生，部署过滤/卸载仍用它）
-QS_SHELL="${QS_SHELL:-}"      # end4-pC | caelestia | dms（由 SESSION 派生）
+# 环境变量预设：SESSION=end4pc ./install.sh install
+# 旧值 caelestia / dms / niri 已移除，给了会警告并回退 end4pc。
+SESSION="${SESSION:-}"        # end4pc
+COMPOSITOR="${COMPOSITOR:-}"  # hyprland（由 SESSION 派生，部署过滤/卸载仍用它）
+QS_SHELL="${QS_SHELL:-}"      # end4-pC（由 SESSION 派生）
 
 # 1=装 / 0=跳过 / 空=执行时询问。脚本化时用 FONTS=0。
 FONTS="${FONTS:-}"
@@ -27,45 +23,29 @@ FONTS_ASKED=0                 # 1 = 已经问过/已定，choose_fonts 不再重
 
 # SESSION → COMPOSITOR + QS_SHELL。
 # COMPOSITOR 仍被部署过滤、卸载范围、完成指引使用，必须从 SESSION 派生。
-# 未知值不静默吞掉：拼错（如 SESSION=niri）以前会静默落到 end4pc，
-#   装完才发现会话不对。现在显式警告并回退默认。
+# 未知值不静默吞掉：显式警告并回退默认。
 session_to_parts() {
     case "$SESSION" in
-        caelestia) COMPOSITOR=hyprland; QS_SHELL=caelestia ;;
-        dms)       COMPOSITOR=niri;     QS_SHELL=dms ;;
         end4pc)    COMPOSITOR=hyprland; QS_SHELL=end4-pC ;;
         *)
-            [[ -n "$SESSION" ]] && warn "未知的 SESSION 预设值 '$SESSION'（合法：end4pc / caelestia / dms），按默认 end4pc 处理"
+            [[ -n "$SESSION" ]] && warn "未知的 SESSION 预设值 '$SESSION'（美化包只支持 end4pc），按默认 end4pc 处理"
             SESSION=end4pc; COMPOSITOR=hyprland; QS_SHELL=end4-pC ;;
     esac
 }
 
 choose_session() {
-    # 环境变量预设：SESSION 优先；没给 SESSION 时回退到旧的 COMPOSITOR
+    # 美化包只提供 end4pc 会话。旧的 caelestia / dms / niri 预设值给警告并回退。
+    if [[ "$SESSION" == caelestia || "$SESSION" == dms ]]; then
+        warn "美化包已移除 caelestia / dms 会话，回退 end4pc"
+        SESSION=""
+    fi
+    if [[ "$COMPOSITOR" == niri ]]; then
+        warn "美化包已移除 niri/DMS 会话，回退 end4pc"
+        COMPOSITOR=""
+    fi
     if [[ -z "$SESSION" && -n "$COMPOSITOR" ]]; then
-        case "$COMPOSITOR" in
-            niri) SESSION=dms ;;
-            *)    SESSION=end4pc ;;
-        esac
+        SESSION=end4pc
     fi
-    if [[ -n "$SESSION" ]]; then
-        session_to_parts
-        echo "    会话（环境变量预设）: $SESSION  →  合成器 $COMPOSITOR + shell $QS_SHELL"
-        return 0
-    fi
-    echo
-    echo "  选择要安装的会话（合成器 + 桌面 Shell）："
-    echo "    1) Hyprland + end4-pC    quickshell（end4-PC 底盘），本仓库主配置"
-    echo "    2) Hyprland + caelestia  caelestia shell（clone + 编译 QML 插件）"
-    echo "    3) niri + DMS            DankMaterialShell（niri 专属桌面 shell）"
-    local ans=""
-    printf '  请输入 1/2/3 [默认 1]: '
-    read_answer ans
-    case "$ans" in
-        2|caelestia|Caelestia)    SESSION=caelestia ;;
-        3|dms|DMS|niri|Niri|NIRI) SESSION=dms ;;
-        *)                        SESSION=end4pc ;;
-    esac
     session_to_parts
     echo "    会话: $SESSION → 合成器 $COMPOSITOR + shell $QS_SHELL"
 }

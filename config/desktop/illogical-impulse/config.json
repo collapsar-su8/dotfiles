@@ -34,9 +34,9 @@
             "type": "auto"
         },
         "transparency": {
-            "automatic": true,
+            "automatic": false,
             "backgroundTransparency": 0.11,
-            "contentTransparency": 0.57,
+            "contentTransparency": 0.3,
             "enable": true,
             "qmlBackdropBlur": true,
             "qmlBackdropBlurRadius": 40

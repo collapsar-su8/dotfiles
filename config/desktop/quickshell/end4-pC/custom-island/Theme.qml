@@ -35,6 +35,16 @@ Singleton {
     property color border:     Appearance.colors.colLayer0Border
     property color iconFont:   Appearance.colors.colOnLayer1
 
+    // ── 玻璃模式数字墨色 ─────────────────────────────────────────────────
+    // 玻璃开启时数字统一用固定灰，深浅主题各一档：#DDE1E6（暗）/ #2E3238（浅），
+    // 对各自主题表面色与玻璃（alpha 0.7）叠黑/白/中灰壁纸的合成底
+    // WCAG 对比度实测全部 ≥4.6（见 dotfiles README）。
+    // 玻璃关闭（实体面板）时维持主题原色。
+    readonly property bool glassOn: (Config?.options.background.widgets.glass.enable) ?? false
+    readonly property color numberInk: root.glassOn
+        ? (Appearance.m3colors.darkmode ? "#DDE1E6" : "#2E3238")
+        : Appearance.colors.colOnLayer1
+
     // ── 工作区配色（逐字照搬 Brain_Shell 的 Colors.qml）───────────────────
     property color wsBackground: "#20000000"
     property color wsActive:     "#FFFFFF"

@@ -44,7 +44,7 @@ show_splash() {
                                            _/ |
                                           |__/
 
-        Arch Linux · Hyprland / niri · Quickshell / DMS
+        Arch Linux · Hyprland · Quickshell
 
 EOF
     draw_header "✨ 核心特性"
@@ -55,7 +55,7 @@ EOF
     echo
     draw_header "🖥️  适配环境"
     printf '  OS       : Omarchy / CachyOS / Arch Linux / EndeavourOS（需要 /etc/arch-release）\n'
-    printf '  会话     : Wayland · Hyprland + end4-PC / caelestia，或 niri + DMS\n'
+    printf '  会话     : Wayland · Hyprland + end4-PC（collapsar-su8 美化 fork）\n'
     printf '  GPU 建议 : Intel 核显 UHD 620+ / AMD Vega 3+ / NVIDIA（需开启 modeset）\n'
     echo
     printf '%s按任意键进入主菜单 ...%s' "${TC_BOLD}${TC_YELLOW}" "${TC_RESET}"
@@ -69,14 +69,14 @@ show_help() {
     echo
     echo "【① 适配环境】"
     echo "  · OS: Omarchy / CachyOS / Arch / EndeavourOS（/etc/arch-release 必须存在）"
-    echo "  · 会话: Wayland · Hyprland（end4-PC / caelestia）或 niri（DMS）"
+    echo "  · 会话: Wayland · Hyprland（end4-PC）"
     echo "  · 建议 GPU: ≥ Intel UHD 620（模糊 + 壁纸视差要一点 GPU 算力）"
     echo
     echo "【② 键位速览】"
     echo "  SUPER         启动器（中文拼音搜索 + 窗口缩略图信息卡）"
     echo "  SUPER+T       终端召唤（居中浮动半透明，再按隐藏）"
     echo "  SUPER+S       Scratchpad（临时工作区）"
-    echo "  SUPER+L       锁屏（Quickshell LockSurface / caelestia lock）"
+    echo "  SUPER+L       锁屏（Quickshell LockSurface）"
     echo "  SUPER+F1      重启 fcitx5 输入法（rime 卡住时用）"
     echo "  SUPER+ESC     打开 quickshell 设置面板"
     echo "  SUPER+方向键  切换工作区 / 移动窗口焦点（配合 SHIFT 则移动窗口）"
@@ -87,10 +87,8 @@ show_help() {
     echo "    ├── custom/     用户差异层（blur / shadow 细项在 custom/general.lua）"
     echo "    └── shellOverrides/main.lua    由 quickshell 设置面板写入，优先级最高"
     echo "  ~/.config/quickshell/end4-pC/         quickshell 底盘 + 差异层（end4-PC）"
-    echo "  ~/.config/quickshell/caelestia/       caelestia shell 本体（仅 caelestia）"
     echo "  ~/src/caelestia-plugin-src/           Caelestia QML 插件源码（编译用）"
     echo "  ~/src/caelestia-build/qml/            插件编译产物（QML2_IMPORT_PATH）"
-    echo "  ~/.config/niri/config.kdl             niri 配置入口（DMS）"
     echo "  ~/.local/state/dotfiles-backup/       备份根（snapshots/ + state/）"
     echo
     echo "【④ 常见问题 FAQ】"
@@ -131,8 +129,8 @@ detail_install() {
     [4/7] 桌面 Shell：
           [4a] Caelestia QML 插件 —— end4-pC 与 caelestia 都编（锁屏硬依赖
                import Caelestia.Config，跳过会导致 shell 加载失败）
-          [4b] shell 本体：end4-PC 拉底盘 / caelestia clone
-               （dms 无此步，DMS 由 [2/7] 的 AUR 包提供）
+          [4b] shell 本体：end4-PC 拉底盘
+               
     [5/7] dot_ 前缀 → $HOME 部署（按会话过滤）；有差异的旧文件自动备份
     [6/7] 拼音搜索 Python venv + pypinyin / dbus-python
     [7/7] 输出后续指引（注销重新登录 · fish chsh · 键位速览）
@@ -175,7 +173,7 @@ EOF
         FONTS_ASKED=1
         echo "  · 字体安装     : $(fonts_label)（按 f 切换）"
         echo
-        printf '%s 注意事项%s：默认只装缺失依赖（首次可能 5-15 分钟）；quickshell 源码编译 5-15 分钟；Caelestia 插件编译 1-3 分钟（end4-pC / caelestia 都要）。\n' "${TC_BOLD}${TC_YELLOW}${TC_BG_BLACK:-}" "${TC_RESET}"
+        printf '%s 注意事项%s：默认只装缺失依赖（首次可能 5-15 分钟）；quickshell 源码编译 5-15 分钟；Caelestia 插件编译 1-3 分钟（锁屏硬依赖）。\n' "${TC_BOLD}${TC_YELLOW}${TC_BG_BLACK:-}" "${TC_RESET}"
         echo
         # 二次确认 + 字体开关 + 返回
         # 这里不复用 confirm_3way：安装页要多给一个 f 键做字体切换，
@@ -211,7 +209,7 @@ detail_uninstall() {
 【功能说明】
   移除 rice 相关的配置/数据文件（可选先打包存档）：
     1) 可选：打包存档为 dotfiles-archive-uninstall-时间戳.tar.gz
-    2) 删除 ~/.config/hypr 或 niri / quickshell / DankMaterialShell / fish / kitty / matugen ... 等 rice 管理目录
+    2) 删除 ~/.config/hypr / quickshell / fish / kitty / matugen ... 等 rice 管理目录
     3) 不删除 ~/ 下其他非 rice 用户文件
   · 系统程序（hyprland / qs / pacman 安装的二进制）保留，如需清理请自行 pacman -Rns
 
@@ -312,7 +310,7 @@ detail_archive() {
         cat <<'EOF'
 【功能说明】
   将 rice 相关的全部配置 / 数据 / 状态 / 备份统一打包为 tar.gz：
-    ① 全部 rice 配置路径（hypr / niri / quickshell / DankMaterialShell / fish / nvim ...）
+    ① 全部 rice 配置路径（hypr / quickshell / fish / nvim ...）
     ② ~/.local/state/quickshell/ （venv / 生成的颜色 / 状态）
     ③ ~/.local/state/dotfiles-backup/ （旧备份 / snapshots / state）
     ④ ~/.cache/quickshell/ （歌词缓存 / 通知等）

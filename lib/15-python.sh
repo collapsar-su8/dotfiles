@@ -222,11 +222,11 @@ install_end4pc_shell() {
         warn "  旧目录已在 [0/7] 的 pre-install 快照里（$SNAP_ROOT），"
         warn "  需要还原时跑：./install.sh rollback"
     fi
-    say "    拉取 quickshell 底盘 (pctrade/end4-PC)"
+    say "    拉取 quickshell 底盘 (collapsar-su8/end4-pC，基于 pctrade/end4-PC 的美化版)"
     # 不能直接 clone 进 $dst：目录非空时 git clone 失败，
     # set -e 会中断整个安装。先克隆到临时目录再合并。
     local tmp; tmp="$(mktmpd)"
-    if git clone --depth=1 https://github.com/pctrade/end4-pC.git "$tmp/end4-PC"; then
+    if git clone --depth=1 https://github.com/collapsar-su8/end4-pC.git "$tmp/end4-PC"; then
         merge_clone_into "$tmp/end4-PC" "$dst"
         # 覆盖后立刻自检。基准是刚 clone 下来的那份而非硬编码清单，
         # 且必须在 rm -rf "$tmp" 之前取值。

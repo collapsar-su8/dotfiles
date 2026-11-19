@@ -39,23 +39,19 @@ status / doctor / deps / theme 只读。
 
 环境变量：
 
-  SESSION=end4pc|caelestia|dms
-      选择会话（合成器 + 桌面 shell），三选一。
+  SESSION=end4pc
+      选择会话。美化包只提供 end4pc：Hyprland + quickshell（end4-PC 底盘，
+      本包的 collapsar-su8/end4-pC fork）。入口 ~/.config/hypr/hyprland.lua、
+      ~/.config/quickshell/end4-pC。
 
-      end4pc      Hyprland + quickshell（end4-PC 底盘），默认
-                  入口 ~/.config/hypr/hyprland.lua、~/.config/quickshell/end4-pC
-      caelestia   Hyprland + caelestia shell
-                  shell clone 到 ~/.config/quickshell/caelestia
-      dms         niri + DankMaterialShell
-                  入口 ~/.config/niri/config.kdl
+      Caelestia QML 插件会编译到 ~/src/caelestia-build
+      （end4-PC 的锁屏依赖 import Caelestia.Config）。
 
-      end4pc 与 caelestia 会把 Caelestia QML 插件编译到 ~/src/caelestia-build
-      （end4-PC 的锁屏依赖 import Caelestia.Config），dms 不需要。
+      旧值 caelestia / dms / niri 已移除，给了会警告并回退 end4pc。
+      不设置时直接使用 end4pc。
 
-      不设置时在 [1/7] 步交互询问。只部署选中的那套，另一套的配置不动。
-
-  COMPOSITOR=niri|hyprland
-      旧写法，等价于 SESSION=dms / SESSION=end4pc。
+  COMPOSITOR=hyprland
+      旧写法，等价于 SESSION=end4pc；niri 不再支持。
 
   INSTALL_BOTH_COMPOSITORS=1
       两套合成器配置都部署。

@@ -265,7 +265,7 @@ StatCard {
                         text: root._hStr
                         font.pixelSize: 72; font.weight: Font.Bold
                         font.family: Theme.monoFontFamily; font.letterSpacing: -4
-                        color: Theme.text
+                        color: Theme.numberInk
                     }
                     Text {
                         id: mmText
@@ -276,7 +276,7 @@ StatCard {
                         text: root._mStr
                         font.pixelSize: 72; font.weight: Font.Bold
                         font.family: Theme.monoFontFamily; font.letterSpacing: -4
-                        color: Theme.active
+                        color: Theme.numberInk
                     }
                 }
 
@@ -312,7 +312,7 @@ StatCard {
                     Text {
                         anchors.centerIn: parent
                         text: root._addTimerOpen ? "x" : "+"
-                        font.pixelSize: 14; color: Theme.active
+                        font.pixelSize: 14; color: Theme.numberInk
                     }
                 }
                 HoverHandler { id: _addTimerHov; cursorShape: Qt.PointingHandCursor }
@@ -437,7 +437,7 @@ StatCard {
                             Text {
                                 anchors.centerIn: parent; text: Translation.tr("Set Timer")
                                 font.pixelSize: 11; font.weight: Font.Medium
-                                color: Theme.active
+                                color: Theme.numberInk
                             }
                             HoverHandler { id: _setTimerHov; cursorShape: Qt.PointingHandCursor }
                             MouseArea {
@@ -478,7 +478,7 @@ StatCard {
                             anchors.centerIn: parent
                             text: root._timerRunning ? Translation.tr("Pause") : Translation.tr("Start")
                             font.pixelSize: 10; font.weight: Font.Medium
-                            color: Theme.active
+                            color: Theme.numberInk
                         }
                         HoverHandler { id: _startHov; cursorShape: Qt.PointingHandCursor }
                         MouseArea {
@@ -558,7 +558,7 @@ StatCard {
                             Text {
                                 anchors.centerIn: parent
                                 text: root._addOpen ? "✕" : "+"
-                                font.pixelSize: 14; color: Theme.active
+                                font.pixelSize: 14; color: Theme.numberInk
                             }
                         }
                         HoverHandler { id: _addHov; cursorShape: Qt.PointingHandCursor }
@@ -617,7 +617,7 @@ StatCard {
                             Text {
                                 anchors.centerIn: parent; text: Translation.tr("Set Alarm")
                                 font.pixelSize: 11; font.weight: Font.Medium
-                                color: Theme.active
+                                color: Theme.numberInk
                             }
                             HoverHandler { id: _setAlarmHov; cursorShape: Qt.PointingHandCursor }
                             MouseArea {
@@ -744,7 +744,7 @@ StatCard {
                             anchors.centerIn: parent
                             text: root._swRunning ? Translation.tr("Stop") : Translation.tr("Start")
                             font.pixelSize: 10; font.weight: Font.Medium
-                            color: Theme.active
+                            color: Theme.numberInk
                         }
                         HoverHandler { id: _swStartHov; cursorShape: Qt.PointingHandCursor }
                         MouseArea {
